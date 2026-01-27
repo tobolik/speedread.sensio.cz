@@ -766,8 +766,7 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                 done: 'Hotovo!',
                 yourSpeed: 'Tvá rychlost',
                 totalTime: 'Celkový čas čtení',
-                timeSaved: 'Ušetřeno',
-                normalTime: 'Při 200 WPM by trvalo',
+                timeSaved: 'Ušetřeno oproti',
                 wordsRead: 'Přečteno slov',
                 minutes: 'min',
                 seconds: 's',
@@ -832,8 +831,7 @@ Začněte pomalu a postupně zvyšujte rychlost. Váš mozek si zvykne a budete 
                 done: 'Done!',
                 yourSpeed: 'Your speed',
                 totalTime: 'Total reading time',
-                timeSaved: 'Time saved',
-                normalTime: 'At 200 WPM would take',
+                timeSaved: 'Saved vs',
                 wordsRead: 'Words read',
                 minutes: 'min',
                 seconds: 's',
@@ -1103,10 +1101,20 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
         // PLAYBACK
         // ============================================================================
 
+        let pendingSpeedChange = false;
+        
         function startInterval() {
+            // Clear any existing interval first
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            
             const delay = 60000 / wordsPerMinute;
             
-            const advanceWord = () => {
+            intervalId = setInterval(() => {
+                if (!isPlaying) return;
+                
                 const currentSentence = paragraphs[currentParagraphIndex]?.[currentSentenceIndex];
                 const isEndOfSentence = currentSentence && currentWordIndex >= currentSentence.words.length - 1;
                 
@@ -1114,12 +1122,12 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                 totalWordsRead++;
                 displayWord();
                 
-                if (isDemoMode) {
+                // Check for demo speed change
+                if (isDemoMode && !pendingSpeedChange) {
                     const totalWords = getTotalWords();
                     const currentWord = getCurrentAbsoluteWordIndex();
                     const progress = currentWord / totalWords;
                     
-                    // Use time-balanced thresholds instead of linear
                     const stageProgress = getDemoProgressThresholds();
                     for (let i = 0; i < stageProgress.length; i++) {
                         if (progress >= stageProgress[i] && currentDemoStage === i) {
@@ -1127,24 +1135,27 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                             if (currentDemoStage < demoSpeedStages.length) {
                                 wordsPerMinute = demoSpeedStages[currentDemoStage];
                                 updateSpeedDisplay();
-                                clearInterval(intervalId);
-                                startInterval();
+                                // Schedule speed change for next iteration
+                                pendingSpeedChange = true;
+                                setTimeout(() => {
+                                    pendingSpeedChange = false;
+                                    if (isPlaying) startInterval();
+                                }, 10);
                             }
                             break;
                         }
                     }
                 }
                 
-                // Add pause after sentence
-                if (isEndOfSentence && isPlaying) {
+                // Add pause after sentence (only if not changing speed)
+                if (isEndOfSentence && isPlaying && !pendingSpeedChange) {
                     clearInterval(intervalId);
+                    intervalId = null;
                     setTimeout(() => {
                         if (isPlaying) startInterval();
                     }, sentencePauseMs);
                 }
-            };
-            
-            intervalId = setInterval(advanceWord, delay);
+            }, delay);
         }
 
         function play() {
@@ -1157,8 +1168,11 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
 
         function pause() {
             isPlaying = false;
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
             updatePlayButton();
-            clearInterval(intervalId);
         }
 
         function togglePlay() {
@@ -1175,12 +1189,22 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
 
         function restart() {
             pause();
+            
+            // Reset all state
             currentParagraphIndex = 0;
             currentSentenceIndex = 0;
             currentWordIndex = 0;
             startTime = null;
             totalWordsRead = 0;
-            finishStats = null; // Reset stats
+            finishStats = null;
+            pendingSpeedChange = false;
+            
+            // Reset demo mode if active
+            if (isDemoMode) {
+                currentDemoStage = 0;
+                wordsPerMinute = demoSpeedStages[0];
+                updateSpeedDisplay();
+            }
             
             // Show progress bar again
             const progressContainer = document.querySelector('.progress-container');
@@ -1199,6 +1223,9 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             displayWord();
             updateProgress();
             document.getElementById('playBtn').innerHTML = `▶ ${lang.play}`;
+            
+            // Auto-start playback
+            setTimeout(() => play(), 100);
         }
 
         let finishStats = null; // Store stats to prevent recalculation
@@ -1253,17 +1280,12 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             const totalSecs = elapsedSeconds % 60;
             const totalTimeDisplay = totalMinutes > 0 
                 ? `${totalMinutes}:${totalSecs.toString().padStart(2, '0')}`
-                : `${totalSecs} ${lang.seconds}`;
+                : `${elapsedSeconds} ${lang.seconds}`;
             
             // Calculate what 200 WPM would take
             const normalSeconds = Math.round((totalWords / 200) * 60);
-            const normalMinutes = Math.floor(normalSeconds / 60);
-            const normalSecs = normalSeconds % 60;
-            const normalTimeDisplay = normalMinutes > 0 
-                ? `${normalMinutes}:${normalSecs.toString().padStart(2, '0')}`
-                : `${normalSeconds} ${lang.seconds}`;
             
-            // Format time saved
+            // Format time saved with reference to 200 WPM time
             const timeSavedDisplay = timeSavedSeconds > 0
                 ? `${timeSavedSeconds} ${lang.seconds}`
                 : '—';
@@ -1281,12 +1303,12 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                             <div class="stat-label">${lang.totalTime}</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-value">${timeSavedDisplay}</div>
-                            <div class="stat-label">${lang.timeSaved}</div>
+                            <div class="stat-value">${totalWords}</div>
+                            <div class="stat-label">${lang.wordsRead}</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-value">${normalTimeDisplay}</div>
-                            <div class="stat-label">${lang.normalTime}</div>
+                            <div class="stat-value">${timeSavedDisplay}</div>
+                            <div class="stat-label">${lang.timeSaved} ${normalSeconds} ${lang.seconds} (200 WPM)</div>
                         </div>
                     </div>
                 </div>
