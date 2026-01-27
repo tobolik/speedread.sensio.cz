@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rychlá Čtečka</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,9 +15,9 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #000;
-            color: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -26,7 +29,8 @@
         .word-before,
         .word-highlight,
         .word-after {
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-weight: 600;
         }
 
         /* Text Input Section */
@@ -59,32 +63,33 @@
         }
 
         .input-container h2 {
-            color: #ff4458;
+            color: #e0e0e0;
             margin-bottom: 20px;
             font-size: 24px;
         }
 
         textarea {
             width: 100%;
-            min-height: 200px;
-            background: #0a0a0a;
-            color: #c0c0c0;
+            min-height: 280px;
+            background: #111;
+            color: #e0e0e0;
             border: 1px solid #333;
             border-radius: 8px;
             padding: 20px;
             font-size: 16px;
-            line-height: 1.6;
+            line-height: 1.7;
             resize: vertical;
             margin-bottom: 20px;
+            font-family: 'Inter', sans-serif;
         }
 
         textarea:focus {
             outline: none;
-            border-color: #ff4458;
+            border-color: #666;
         }
 
         button {
-            background: #ff4458;
+            background: #444;
             color: #fff;
             border: none;
             padding: 14px 32px;
@@ -96,20 +101,28 @@
         }
 
         button:hover {
-            background: #ff5566;
-            transform: scale(1.05);
+            background: #555;
+            transform: scale(1.02);
         }
 
         button:active {
-            transform: scale(0.95);
+            transform: scale(0.98);
+        }
+
+        button.primary {
+            background: #c43850;
+        }
+
+        button.primary:hover {
+            background: #d64a62;
         }
 
         button.secondary {
-            background: #333;
+            background: #2a2a2a;
         }
 
         button.secondary:hover {
-            background: #444;
+            background: #3a3a3a;
         }
 
         /* Reader View */
@@ -122,6 +135,7 @@
         .reader-view {
             flex: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
@@ -129,14 +143,18 @@
         }
 
         .word-display {
-            font-size: 3.5rem;
-            font-weight: 700;
+            font-size: clamp(2rem, 8vw, 4rem);
+            font-weight: 600;
             line-height: 1.2;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
         }
 
         .word-container {
             position: relative;
-            display: inline-block;
+            display: block;
+            width: 100%;
         }
 
         .word-layout {
@@ -144,14 +162,16 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            height: 1.2em;
+            height: 1.3em;
+            width: 100%;
         }
 
         .word-before {
-            color: #c0c0c0;
+            color: #b0b0b0;
             position: absolute;
-            right: calc(50% + 0.3em);
+            right: calc(50% + 0.25em);
             white-space: nowrap;
+            text-align: right;
         }
 
         .word-highlight {
@@ -159,15 +179,85 @@
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            width: 0.6em;
+            width: auto;
+            min-width: 0.5em;
             text-align: center;
         }
 
         .word-after {
-            color: #c0c0c0;
+            color: #b0b0b0;
             position: absolute;
-            left: calc(50% + 0.3em);
+            left: calc(50% + 0.25em);
             white-space: nowrap;
+            text-align: left;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            padding: 0 20px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #222;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ff4458;
+            width: 0%;
+            transition: width 0.15s ease-out;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        /* Success Screen */
+        .success-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-screen h2 {
+            color: #4ade80;
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            max-width: 500px;
+            margin: 0 auto 30px;
+        }
+
+        .stat-item {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ff4458;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #888;
         }
 
         /* Controls */
@@ -258,7 +348,7 @@
         }
 
         .lang-btn.active {
-            background: #ff4458;
+            background: #555;
             color: #fff;
         }
 
@@ -288,7 +378,7 @@
         }
 
         .speed-value {
-            color: #ff4458;
+            color: #e0e0e0;
             font-size: 18px;
             font-weight: 600;
             display: block;
@@ -416,7 +506,7 @@
 Místo toho, aby vaše oči musely skákat z řádku na řádek, text je prezentován slovo po slovu na stejném místě. To eliminuje potřebu pohybu očí a umožňuje mozku zpracovávat informace mnohem rychleji.
 
 Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S tréninkem a pomocí technik jako je tato můžete dosáhnout rychlosti až 800-1000 slov za minutu.</textarea>
-            <button onclick="startReading()" id="startBtn">Začít číst</button>
+            <button onclick="startReading()" id="startBtn" class="primary">Začít číst</button>
         </div>
     </div>
 
@@ -442,9 +532,15 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
             <div class="word-display" id="wordDisplay">
                 <div class="word-container">
                     <div class="word-layout">
-                        <span class="word-highlight">Připrav se...</span>
+                        <span class="word-highlight" id="prepareText">Připrav se...</span>
                     </div>
                 </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">0 / 0</div>
             </div>
         </div>
 
@@ -452,8 +548,8 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
         <div class="controls minimal" id="controls">
             <div class="controls-inner">
                 <div class="main-controls">
-                    <button id="playBtn" onclick="togglePlay()">▶ Start</button>
-                    <button id="demoBtn" style="background: #ff8800;" onclick="toggleDemo()">🎬 Demo</button>
+                    <button id="playBtn" class="primary" onclick="togglePlay()">▶ Start</button>
+                    <button id="demoBtn" class="secondary" onclick="toggleDemo()">🎬 Demo</button>
                     <button class="secondary" onclick="showTextInput()">✎ <span id="changeTextBtn">Změnit text</span></button>
                     <button class="secondary" onclick="toggleMode()" id="toggleViewBtn">Rozšířené zobrazení</button>
                 </div>
@@ -568,7 +664,22 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                 expandedView: 'Rozšířené zobrazení',
                 minimalView: 'Minimální zobrazení',
                 footerText: 'Navajbkódil',
+                prepare: 'Připrav se...',
+                done: 'Hotovo!',
+                yourSpeed: 'Tvá rychlost',
+                timeSaved: 'Ušetřený čas',
+                wordsRead: 'Přečteno slov',
+                minutes: 'min',
+                seconds: 's',
+                readAgain: 'Číst znovu',
+                newText: 'Nový text',
                 demoConfirm: 'Aktivuje se demo režim se zrychlujícím tempem od 250 do 900 slov/min.\n\nPokračovat?',
+                placeholder: 'Vlož sem text, který chceš číst...',
+                defaultText: `Rychlé čtení je dovednost, která může výrazně zlepšit vaši produktivitu. Tato technika funguje na principu RSVP - Rapid Serial Visual Presentation.
+
+Místo toho, aby vaše oči musely skákat z řádku na řádek, text je prezentován slovo po slovu na stejném místě. To eliminuje potřebu pohybu očí a umožňuje mozku zpracovávat informace mnohem rychleji.
+
+Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S tréninkem a pomocí technik jako je tato můžete dosáhnout rychlosti až 800-1000 slov za minutu.`,
                 demoText: `Vítejte v inteligentní čtečce! Tato aplikace vám pomůže číst mnohem rychleji.
 
 Průměrný člověk čte rychlostí 200-300 slov za minutu. S touto technikou můžete dosáhnout rychlosti až 800-1000 slov za minutu.
@@ -616,7 +727,22 @@ Začněte pomalu a postupně zvyšujte rychlost. Váš mozek si zvykne a budete 
                 expandedView: 'Expanded view',
                 minimalView: 'Minimal view',
                 footerText: 'Coded by',
+                prepare: 'Get ready...',
+                done: 'Done!',
+                yourSpeed: 'Your speed',
+                timeSaved: 'Time saved',
+                wordsRead: 'Words read',
+                minutes: 'min',
+                seconds: 's',
+                readAgain: 'Read again',
+                newText: 'New text',
                 demoConfirm: 'Demo mode will activate with speeds increasing from 250 to 900 words/min.\n\nContinue?',
+                placeholder: 'Paste the text you want to read...',
+                defaultText: `Speed reading is a skill that can significantly improve your productivity. This technique works on the principle of RSVP - Rapid Serial Visual Presentation.
+
+Instead of your eyes having to jump from line to line, text is presented word by word in the same place. This eliminates the need for eye movement and allows the brain to process information much faster.
+
+Studies show that the average person reads at 200-300 words per minute. With training and techniques like this, you can achieve speeds of up to 800-1000 words per minute.`,
                 demoText: `Welcome to the intelligent speed reader! This app will help you read much faster.
 
 The average person reads at 200-300 words per minute. With this technique you can reach speeds of 800-1000 words per minute.
@@ -651,6 +777,23 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             } else {
                 document.getElementById('langEn').classList.add('active');
                 document.getElementById('inputLangEn').classList.add('active');
+            }
+            
+            // Update textarea placeholder and default text
+            const textarea = document.getElementById('textInput');
+            textarea.placeholder = lang.placeholder;
+            
+            // If textarea has default text, update it
+            const csDefault = translations.cs.defaultText;
+            const enDefault = translations.en.defaultText;
+            if (textarea.value === csDefault || textarea.value === enDefault || textarea.value.trim() === '') {
+                textarea.value = lang.defaultText;
+            }
+            
+            // Update "Připrav se..." text if visible
+            const prepareText = document.getElementById('prepareText');
+            if (prepareText) {
+                prepareText.textContent = lang.prepare;
             }
             
             updateUILanguage();
@@ -707,11 +850,16 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
         let isPlaying = false;
         let intervalId = null;
         let wordsPerMinute = 300;
-        let highlightMode = 'optimal';
+        let highlightMode = 'middle'; // Changed to middle for better centering
         let isMinimalMode = true;
         let isDemoMode = false;
         let demoSpeedStages = [250, 300, 400, 500, 600, 700, 800, 900];
         let currentDemoStage = 0;
+        
+        // Timing tracking
+        let startTime = null;
+        let totalWordsRead = 0;
+        let sentencePauseMs = 150; // Pause after sentence
 
         // ============================================================================
         // TEXT PARSING
@@ -796,24 +944,8 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
 
             const word = sentence.words[currentWordIndex];
             
-            let highlightIndex;
-            if (highlightMode === 'first') {
-                highlightIndex = 0;
-            } else if (highlightMode === 'middle') {
-                highlightIndex = Math.floor(word.length / 2);
-            } else {
-                if (word.length === 1) {
-                    highlightIndex = 0;
-                } else if (word.length <= 5) {
-                    highlightIndex = 1;
-                } else if (word.length <= 9) {
-                    highlightIndex = 2;
-                } else if (word.length <= 13) {
-                    highlightIndex = 3;
-                } else {
-                    highlightIndex = 4;
-                }
-            }
+            // Always use middle letter for highlighting (better for centering)
+            const highlightIndex = Math.floor(word.length / 2);
             
             const before = word.substring(0, highlightIndex);
             const highlighted = word.charAt(highlightIndex);
@@ -828,6 +960,17 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                     </div>
                 </div>
             `;
+            
+            updateProgress();
+        }
+        
+        function updateProgress() {
+            const totalWords = getTotalWords();
+            const currentWord = getCurrentAbsoluteWordIndex() + 1;
+            const progress = (currentWord / totalWords) * 100;
+            
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `${currentWord} / ${totalWords}`;
         }
 
         // ============================================================================
@@ -836,8 +979,13 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
 
         function startInterval() {
             const delay = 60000 / wordsPerMinute;
-            intervalId = setInterval(() => {
+            
+            const advanceWord = () => {
+                const currentSentence = paragraphs[currentParagraphIndex]?.[currentSentenceIndex];
+                const isEndOfSentence = currentSentence && currentWordIndex >= currentSentence.words.length - 1;
+                
                 currentWordIndex++;
+                totalWordsRead++;
                 displayWord();
                 
                 if (isDemoMode) {
@@ -859,11 +1007,22 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                         }
                     }
                 }
-            }, delay);
+                
+                // Add pause after sentence
+                if (isEndOfSentence && isPlaying) {
+                    clearInterval(intervalId);
+                    setTimeout(() => {
+                        if (isPlaying) startInterval();
+                    }, sentencePauseMs);
+                }
+            };
+            
+            intervalId = setInterval(advanceWord, delay);
         }
 
         function play() {
             if (paragraphs.length === 0) return;
+            if (!startTime) startTime = Date.now();
             isPlaying = true;
             updatePlayButton();
             startInterval();
@@ -892,21 +1051,62 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             currentParagraphIndex = 0;
             currentSentenceIndex = 0;
             currentWordIndex = 0;
+            startTime = null;
+            totalWordsRead = 0;
+            
+            // Show progress bar again
+            document.querySelector('.progress-container').style.display = 'block';
+            
             displayWord();
             document.getElementById('playBtn').innerHTML = `▶ ${lang.continue}`;
         }
 
         function finish() {
             pause();
+            
+            const endTime = Date.now();
+            const elapsedMs = endTime - startTime;
+            const elapsedMinutes = elapsedMs / 60000;
+            const totalWords = getTotalWords();
+            const actualWpm = Math.round(totalWords / elapsedMinutes);
+            
+            // Calculate time saved vs reading at 200 WPM
+            const normalReadingTime = totalWords / 200; // minutes at 200 WPM
+            const actualTime = elapsedMinutes;
+            const timeSavedMinutes = Math.max(0, normalReadingTime - actualTime);
+            const timeSavedSeconds = Math.round(timeSavedMinutes * 60);
+            
+            const timeSavedDisplay = timeSavedMinutes >= 1 
+                ? `${Math.floor(timeSavedMinutes)} ${lang.minutes} ${timeSavedSeconds % 60} ${lang.seconds}`
+                : `${timeSavedSeconds} ${lang.seconds}`;
+            
             document.getElementById('wordDisplay').innerHTML = `
-                <div class="word-container">
-                    <div class="word-layout">
-                        <span class="word-before">Ho</span>
-                        <span class="word-highlight">t</span>
-                        <span class="word-after">ovo!</span>
+                <div class="success-screen">
+                    <h2>🎉 ${lang.done}</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">${actualWpm}</div>
+                            <div class="stat-label">${lang.yourSpeed} (WPM)</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${timeSavedDisplay}</div>
+                            <div class="stat-label">${lang.timeSaved}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${totalWords}</div>
+                            <div class="stat-label">${lang.wordsRead}</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <button class="primary" onclick="restart()">↺ ${lang.readAgain}</button>
+                        <button class="secondary" onclick="showTextInput()">✎ ${lang.newText}</button>
                     </div>
                 </div>
             `;
+            
+            // Hide progress bar
+            document.querySelector('.progress-container').style.display = 'none';
+            
             document.getElementById('playBtn').innerHTML = `↺ ${lang.restart}`;
             
             if (isDemoMode) {
@@ -916,7 +1116,6 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                 wordsPerMinute = 300;
                 updateSpeedDisplay();
                 updateDemoButton();
-                setTimeout(() => showTextInput(), 1500);
             }
         }
 
@@ -1050,7 +1249,7 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
         function startReading() {
             const text = document.getElementById('textInput').value.trim();
             if (!text) {
-                alert('Prosím, vlož nějaký text!');
+                alert(currentLang === 'cs' ? 'Prosím, vlož nějaký text!' : 'Please enter some text!');
                 return;
             }
 
@@ -1058,9 +1257,14 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             currentParagraphIndex = 0;
             currentSentenceIndex = 0;
             currentWordIndex = 0;
+            startTime = null;
+            totalWordsRead = 0;
             
             document.getElementById('textInputSection').classList.add('hidden');
             document.getElementById('readerContainer').classList.remove('hidden');
+            
+            // Show progress bar
+            document.querySelector('.progress-container').style.display = 'block';
             
             // Ensure minimal mode is active
             if (!isMinimalMode) {
@@ -1100,6 +1304,8 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             currentSentenceIndex = 0;
             currentWordIndex = 0;
             currentDemoStage = 0;
+            startTime = null;
+            totalWordsRead = 0;
             
             wordsPerMinute = demoSpeedStages[0];
             updateSpeedDisplay();
@@ -1110,6 +1316,9 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             
             document.getElementById('textInputSection').classList.add('hidden');
             document.getElementById('readerContainer').classList.remove('hidden');
+            
+            // Show progress bar
+            document.querySelector('.progress-container').style.display = 'block';
             
             if (!isMinimalMode) {
                 toggleMode();
