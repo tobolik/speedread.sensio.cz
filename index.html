@@ -867,6 +867,23 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
         let demoSpeedStages = [250, 300, 400, 500, 600, 700, 800, 900];
         let currentDemoStage = 0;
         
+        // Calculate progress thresholds for equal TIME per stage (not equal words)
+        // At speed S, words per second = S/60
+        // To get equal time, word count should be proportional to speed
+        function getDemoProgressThresholds() {
+            const speeds = demoSpeedStages;
+            const totalSpeed = speeds.reduce((a, b) => a + b, 0);
+            const thresholds = [];
+            let cumulative = 0;
+            for (let i = 0; i < speeds.length - 1; i++) {
+                cumulative += speeds[i];
+                thresholds.push(cumulative / totalSpeed);
+            }
+            return thresholds;
+            // Result: [0.057, 0.126, 0.218, 0.333, 0.471, 0.632, 0.816]
+            // Slower speeds get fewer words, faster speeds get more
+        }
+        
         // Timing tracking
         let startTime = null;
         let totalWordsRead = 0;
@@ -1004,7 +1021,8 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                     const currentWord = getCurrentAbsoluteWordIndex();
                     const progress = currentWord / totalWords;
                     
-                    const stageProgress = [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875];
+                    // Use time-balanced thresholds instead of linear
+                    const stageProgress = getDemoProgressThresholds();
                     for (let i = 0; i < stageProgress.length; i++) {
                         if (progress >= stageProgress[i] && currentDemoStage === i) {
                             currentDemoStage = i + 1;
