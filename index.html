@@ -731,7 +731,7 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
 
         <!-- Footer -->
         <div class="footer">
-            v1.2.2 | <span id="footerText">Vibecoded by</span> <a href="https://www.linkedin.com/in/jantobolik/" target="_blank">Honza Tobolík</a> @ <a href="https://sensio.cz" target="_blank">Sensio.cz</a>
+            v1.2.3 | <span id="footerText">Vibecoded by</span> <a href="https://www.linkedin.com/in/jantobolik/" target="_blank">Honza Tobolík</a> @ <a href="https://sensio.cz" target="_blank">Sensio.cz</a>
         </div>
     </div>
 
@@ -1234,7 +1234,11 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             
             displayWord();
             updateProgress();
-            document.getElementById('playBtn').innerHTML = `▶ ${lang.play}`;
+            
+            // Restore button to normal play/pause functionality
+            const playBtn = document.getElementById('playBtn');
+            playBtn.innerHTML = `▶ ${lang.play}`;
+            playBtn.setAttribute('onclick', 'togglePlay()');
             
             // Auto-start playback
             setTimeout(() => play(), 100);
@@ -1368,7 +1372,10 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             // Hide progress bar
             document.querySelector('.progress-container').style.display = 'none';
             
-            document.getElementById('playBtn').innerHTML = `↺ ${lang.restart}`;
+            // Change button to restart functionality
+            const playBtn = document.getElementById('playBtn');
+            playBtn.innerHTML = `↺ ${lang.restart}`;
+            playBtn.setAttribute('onclick', 'restart()');
         }
 
         function updatePlayButton() {
