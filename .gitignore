@@ -1,0 +1,12 @@
+# Configuration with credentials
+config.php
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

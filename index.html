@@ -720,7 +720,7 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
 
         <!-- Footer -->
         <div class="footer">
-            v1.1.2 | <span id="footerText">Vibecoded by</span> <a href="https://www.linkedin.com/in/jantobolik/" target="_blank">Honza Tobolík</a> @ <a href="https://sensio.cz" target="_blank">Sensio.cz</a>
+            v1.2.0 | <span id="footerText">Vibecoded by</span> <a href="https://www.linkedin.com/in/jantobolik/" target="_blank">Honza Tobolík</a> @ <a href="https://sensio.cz" target="_blank">Sensio.cz</a>
         </div>
     </div>
 
@@ -1260,6 +1260,9 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                 totalWords
             };
             
+            // Save stats to server
+            saveStatsToServer();
+            
             showFinishScreen();
             
             if (isDemoMode) {
@@ -1270,6 +1273,42 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                 updateSpeedDisplay();
                 updateDemoButton();
             }
+        }
+        
+        function saveStatsToServer() {
+            if (!finishStats) return;
+            
+            const text = document.getElementById('textInput').value.trim();
+            
+            const data = {
+                text: text,
+                wpm: finishStats.actualWpm,
+                total_time_seconds: finishStats.elapsedSeconds,
+                words_read: finishStats.totalWords,
+                time_saved_seconds: finishStats.timeSavedSeconds,
+                current_speed: wordsPerMinute,
+                language: currentLanguage,
+                is_demo: isDemoMode
+            };
+            
+            fetch('save-stats.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    console.log('Stats saved, ID:', result.id);
+                } else {
+                    console.error('Failed to save stats:', result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving stats:', error);
+            });
         }
         
         function showFinishScreen() {
