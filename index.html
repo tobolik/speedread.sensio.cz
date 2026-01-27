@@ -22,7 +22,7 @@
             display: flex;
             flex-direction: column;
         }
-
+        
         .word-display,
         .word-container,
         .word-layout,
@@ -185,7 +185,7 @@
             text-align: center;
             white-space: nowrap;
         }
-        
+
         .prepare-text {
             color: #888;
             font-size: 1.5rem;
@@ -547,12 +547,12 @@
                 gap: 8px;
                 margin-bottom: 10px;
             }
-            
+
             button {
                 padding: 10px 16px;
                 font-size: 14px;
             }
-            
+
             .reader-view {
                 min-height: 250px;
                 padding: 10px;
@@ -582,7 +582,7 @@
             .stats-grid {
                 gap: 10px;
             }
-            
+
             .stat-item {
                 padding: 12px;
             }
@@ -604,11 +604,11 @@
 </head>
 <body>
     <!-- Text Input Section -->
-    <div class="text-input-section" id="textInputSection">
+        <div class="text-input-section" id="textInputSection">
         <div class="input-lang-selector">
             <button class="lang-btn active" id="inputLangCs" onclick="setLanguage('cs')">CZ</button>
             <button class="lang-btn" id="inputLangEn" onclick="setLanguage('en')">EN</button>
-        </div>
+            </div>
         <div class="input-container">
             <h2 id="inputTitle">Vlož text ke čtení</h2>
             <textarea id="textInput" placeholder="Vlož sem text, který chceš číst...">Rychlé čtení je dovednost, která může výrazně zlepšit vaši produktivitu. Tato technika funguje na principu RSVP - Rapid Serial Visual Presentation.
@@ -620,8 +620,8 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                 <button onclick="startReading()" id="startBtn" class="primary">Začít číst</button>
                 <button onclick="hideTextInput()" id="hideTextBtn" class="secondary" style="display: none;">✕ <span id="hideTextLabel">Skrýt</span></button>
             </div>
+            </div>
         </div>
-    </div>
 
     <!-- Reader Container -->
     <div class="reader-container hidden" id="readerContainer">
@@ -631,8 +631,8 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                 <div class="language-selector">
                     <button class="lang-btn active" id="langCs" onclick="setLanguage('cs')">CZ</button>
                     <button class="lang-btn" id="langEn" onclick="setLanguage('en')">EN</button>
+                    </div>
                 </div>
-            </div>
             <div class="speed-indicator" id="speedIndicator">
                 <div class="speed-label" id="speedLabel">Rychlost</div>
                 <div class="speed-value" id="speedValue">300 slov/min</div>
@@ -650,8 +650,8 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
                 <div class="progress-text" id="progressText">0 / 0</div>
-            </div>
-        </div>
+                </div>
+                </div>
 
         <!-- Controls -->
         <div class="controls minimal" id="controls">
@@ -671,7 +671,6 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                 </div>
 
                 <div class="extended-controls">
-                    <button class="secondary" onclick="restart()">↺ <span id="restartBtn">Číst znovu</span></button>
                     <button class="secondary" onclick="goToStart()">⏮⏮ <span id="startTextBtn">Začátek</span></button>
                     <button class="secondary" onclick="goToEnd()"><span id="endTextBtn">Konec</span> ⏭⏭</button>
                 </div>
@@ -732,7 +731,7 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
 
         <!-- Footer -->
         <div class="footer">
-            v1.2.0 | <span id="footerText">Vibecoded by</span> <a href="https://www.linkedin.com/in/jantobolik/" target="_blank">Honza Tobolík</a> @ <a href="https://sensio.cz" target="_blank">Sensio.cz</a>
+            v1.2.1 | <span id="footerText">Vibecoded by</span> <a href="https://www.linkedin.com/in/jantobolik/" target="_blank">Honza Tobolík</a> @ <a href="https://sensio.cz" target="_blank">Sensio.cz</a>
         </div>
     </div>
 
@@ -924,7 +923,6 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             document.getElementById('nextParaBtn').textContent = lang.paragraph;
             document.getElementById('prevSentBtn').textContent = lang.sentence;
             document.getElementById('nextSentBtn').textContent = lang.sentence;
-            document.getElementById('restartBtn').textContent = lang.restart;
             document.getElementById('startTextBtn').textContent = lang.start;
             document.getElementById('endTextBtn').textContent = lang.end;
             document.getElementById('shortcutsTitle').textContent = `⌨️ ${lang.shortcuts}`;
@@ -1074,7 +1072,7 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                     currentSentenceIndex = 0;
                     currentWordIndex = 0;
                     displayWord();
-                } else {
+                    } else {
                     finish();
                 }
                 return;
@@ -1085,21 +1083,21 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             // Always use middle letter for highlighting (better for centering)
             const highlightIndex = Math.floor(word.length / 2);
             
-            const before = word.substring(0, highlightIndex);
-            const highlighted = word.charAt(highlightIndex);
-            const after = word.substring(highlightIndex + 1);
-            
+                const before = word.substring(0, highlightIndex);
+                const highlighted = word.charAt(highlightIndex);
+                const after = word.substring(highlightIndex + 1);
+                
             document.getElementById('wordDisplay').innerHTML = `
                 <div class="word-container">
-                    <div class="word-layout">
-                        <span class="word-before">${before}</span>
-                        <span class="word-highlight">${highlighted}</span>
-                        <span class="word-after">${after}</span>
+                        <div class="word-layout">
+                            <span class="word-before">${before}</span>
+                            <span class="word-highlight">${highlighted}</span>
+                            <span class="word-after">${after}</span>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
             
-            updateProgress();
+                updateProgress();
         }
         
         function updateProgress() {
@@ -1116,7 +1114,7 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
         // ============================================================================
 
         let pendingSpeedChange = false;
-        
+
         function startInterval() {
             // Clear any existing interval first
             if (intervalId) {
@@ -1183,7 +1181,7 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
         function pause() {
             isPlaying = false;
             if (intervalId) {
-                clearInterval(intervalId);
+            clearInterval(intervalId);
                 intervalId = null;
             }
             updatePlayButton();
@@ -1243,7 +1241,7 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
         }
 
         let finishStats = null; // Store stats to prevent recalculation
-        
+
         function finish() {
             // Prevent multiple calls
             if (finishStats) {
