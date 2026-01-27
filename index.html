@@ -183,6 +183,13 @@
             width: auto;
             min-width: 0.5em;
             text-align: center;
+            white-space: nowrap;
+        }
+        
+        .prepare-text {
+            color: #888;
+            font-size: 1.5rem;
+            text-align: center;
         }
 
         .word-after {
@@ -481,22 +488,104 @@
 
         @media (max-width: 768px) {
             .word-display {
-                font-size: 2.5rem;
+                font-size: clamp(1.8rem, 7vw, 2.5rem);
             }
 
             .top-bar {
-                flex-direction: column;
+                position: relative;
                 height: auto;
                 padding: 10px;
-                gap: 10px;
+                gap: 8px;
+                flex-wrap: wrap;
+                justify-content: center;
             }
 
             .reader-container {
-                padding-top: 140px;
+                padding-top: 0;
             }
 
             .speed-indicator {
-                min-width: 180px;
+                min-width: 150px;
+                padding: 8px 12px;
+                margin: 0;
+            }
+            
+            .speed-value {
+                font-size: 14px;
+            }
+            
+            .speed-label {
+                font-size: 10px;
+            }
+            
+            .language-selector {
+                padding: 3px;
+            }
+            
+            .lang-btn {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+            
+            .controls {
+                padding: 10px;
+            }
+            
+            .main-controls {
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            
+            button {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            .reader-view {
+                min-height: 250px;
+                padding: 10px;
+            }
+            
+            .text-input-section {
+                padding: 15px;
+            }
+            
+            .input-lang-selector {
+                position: static;
+                margin-bottom: 15px;
+                justify-content: center;
+            }
+            
+            textarea {
+                min-height: 150px;
+                padding: 12px;
+                font-size: 14px;
+            }
+            
+            .input-container h2 {
+                font-size: 20px;
+                text-align: center;
+            }
+            
+            .stats-grid {
+                gap: 10px;
+            }
+            
+            .stat-item {
+                padding: 12px;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .stat-label {
+                font-size: 11px;
+            }
+            
+            .success-screen h2 {
+                font-size: 1.5rem;
+                margin-bottom: 20px;
             }
         }
     </style>
@@ -542,11 +631,7 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
         <!-- Word Display -->
         <div class="reader-view">
             <div class="word-display" id="wordDisplay">
-                <div class="word-container">
-                    <div class="word-layout">
-                        <span class="word-highlight" id="prepareText">Připrav se...</span>
-                    </div>
-                </div>
+                <div class="prepare-text" id="prepareText">Připrav se...</div>
             </div>
             <div class="progress-container">
                 <div class="progress-bar">
@@ -680,8 +765,9 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                 prepare: 'Připrav se...',
                 done: 'Hotovo!',
                 yourSpeed: 'Tvá rychlost',
-                totalTime: 'Celkový čas',
-                timeSaved: 'Ušetřeno oproti 200 WPM',
+                totalTime: 'Celkový čas čtení',
+                timeSaved: 'Ušetřeno',
+                normalTime: 'Při 200 WPM by trvalo',
                 wordsRead: 'Přečteno slov',
                 minutes: 'min',
                 seconds: 's',
@@ -745,8 +831,9 @@ Začněte pomalu a postupně zvyšujte rychlost. Váš mozek si zvykne a budete 
                 prepare: 'Get ready...',
                 done: 'Done!',
                 yourSpeed: 'Your speed',
-                totalTime: 'Total time',
-                timeSaved: 'Saved vs 200 WPM',
+                totalTime: 'Total reading time',
+                timeSaved: 'Time saved',
+                normalTime: 'At 200 WPM would take',
                 wordsRead: 'Words read',
                 minutes: 'min',
                 seconds: 's',
@@ -808,7 +895,7 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             
             // Update "Připrav se..." text if visible
             const prepareText = document.getElementById('prepareText');
-            if (prepareText) {
+            if (prepareText && prepareText.classList.contains('prepare-text')) {
                 prepareText.textContent = lang.prepare;
             }
             
@@ -1096,10 +1183,22 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             finishStats = null; // Reset stats
             
             // Show progress bar again
-            document.querySelector('.progress-container').style.display = 'block';
+            const progressContainer = document.querySelector('.progress-container');
+            if (progressContainer) {
+                progressContainer.style.display = 'block';
+            }
+            
+            // Re-parse text if needed
+            if (paragraphs.length === 0) {
+                const text = document.getElementById('textInput').value.trim();
+                if (text) {
+                    parseText(text);
+                }
+            }
             
             displayWord();
-            document.getElementById('playBtn').innerHTML = `▶ ${lang.continue}`;
+            updateProgress();
+            document.getElementById('playBtn').innerHTML = `▶ ${lang.play}`;
         }
 
         let finishStats = null; // Store stats to prevent recalculation
@@ -1156,11 +1255,17 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                 ? `${totalMinutes}:${totalSecs.toString().padStart(2, '0')}`
                 : `${totalSecs} ${lang.seconds}`;
             
+            // Calculate what 200 WPM would take
+            const normalSeconds = Math.round((totalWords / 200) * 60);
+            const normalMinutes = Math.floor(normalSeconds / 60);
+            const normalSecs = normalSeconds % 60;
+            const normalTimeDisplay = normalMinutes > 0 
+                ? `${normalMinutes}:${normalSecs.toString().padStart(2, '0')}`
+                : `${normalSeconds} ${lang.seconds}`;
+            
             // Format time saved
-            const savedMinutes = Math.floor(timeSavedSeconds / 60);
-            const savedSecs = timeSavedSeconds % 60;
             const timeSavedDisplay = timeSavedSeconds > 0
-                ? (savedMinutes > 0 ? `${savedMinutes}:${savedSecs.toString().padStart(2, '0')}` : `${savedSecs} ${lang.seconds}`)
+                ? `${timeSavedSeconds} ${lang.seconds}`
                 : '—';
             
             document.getElementById('wordDisplay').innerHTML = `
@@ -1180,8 +1285,8 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                             <div class="stat-label">${lang.timeSaved}</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-value">${totalWords}</div>
-                            <div class="stat-label">${lang.wordsRead}</div>
+                            <div class="stat-value">${normalTimeDisplay}</div>
+                            <div class="stat-label">${lang.normalTime}</div>
                         </div>
                     </div>
                 </div>
