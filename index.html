@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Čtečka textu - Word by Word</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .word-display,
+        .word-container,
+        .word-before,
+        .word-highlight,
+        .word-after {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+        }
+
+        .reader-view {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .word-display {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.2;
+            padding: 20px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 90%;
+            position: relative;
+        }
+
+        .word-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .word-container.animated {
+            animation: fadeInScale 0.3s ease-out;
+        }
+
+        .word-layout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            height: 1.2em;
+        }
+
+        .word-center-marker {
+            width: 0.6em;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .word-before {
+            color: #888;
+            position: absolute;
+            right: calc(50% + 0.3em);
+            white-space: nowrap;
+        }
+
+        .word-highlight {
+            color: #ff4458;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0.6em;
+            text-align: center;
+        }
+
+        .word-after {
+            color: #888;
+            position: absolute;
+            left: calc(50% + 0.3em);
+            white-space: nowrap;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .controls {
+            background: #1a1a1a;
+            padding: 20px;
+            border-top: 1px solid #333;
+        }
+
+        .controls-inner {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ff4458;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #ff4458;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #ff5566;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button.secondary {
+            background: #333;
+        }
+
+        button.secondary:hover {
+            background: #444;
+        }
+
+        .tab-button {
+            background: transparent;
+            color: #888;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .tab-button:hover {
+            background: #333;
+            transform: none;
+        }
+
+        .tab-button.active {
+            background: #333;
+            color: #ff4458;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .speed-control label {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .speed-control input[type="range"] {
+            flex: 1;
+            max-width: 300px;
+            height: 6px;
+            border-radius: 3px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .speed-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ff4458;
+            cursor: pointer;
+        }
+
+        .speed-control input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ff4458;
+            cursor: pointer;
+            border: none;
+        }
+
+        .speed-value {
+            min-width: 100px;
+            text-align: center;
+            font-weight: 600;
+            color: #ff4458;
+        }
+
+        .text-input-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .text-input-section.hidden {
+            display: none;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            background: #000;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #ff4458;
+        }
+
+        .stats {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .word-display {
+                font-size: 2rem;
+                min-height: 150px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .speed-control {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .speed-control input[type="range"] {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-input-section" id="textInputSection">
+            <div style="margin-bottom: 15px; display: flex; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <button class="tab-button active" onclick="switchTab('text')" style="background: transparent; padding: 8px 16px; border-radius: 6px 6px 0 0;">📝 Text</button>
+                <button class="tab-button" onclick="switchTab('url')" style="background: transparent; padding: 8px 16px; border-radius: 6px 6px 0 0;">🌐 URL</button>
+                <button class="tab-button" onclick="switchTab('file')" style="background: transparent; padding: 8px 16px; border-radius: 6px 6px 0 0;">📄 Soubor</button>
+            </div>
+            
+            <div id="textTab" class="input-tab">
+                <textarea id="textInput" placeholder="Vlož sem text, který chceš číst...">Víte, co všechno dokáže vaše mysl a jak rychle zvládnete číst? Vyzkoušejte si to v našem videu a pak nám nezapomeňte dát vědět do komentářů.</textarea>
+                <button onclick="startReading()">Začít číst</button>
+            </div>
+            
+            <div id="urlTab" class="input-tab" style="display: none;">
+                <input type="url" id="urlInput" placeholder="https://example.com/clanek" style="width: 100%; background: #000; color: #fff; border: 1px solid #333; border-radius: 8px; padding: 15px; font-size: 16px; margin-bottom: 10px;">
+                <button onclick="loadFromUrl()">Načíst z URL</button>
+                <div id="urlStatus" style="margin-top: 10px; color: #aaa; font-size: 14px;"></div>
+            </div>
+            
+            <div id="fileTab" class="input-tab" style="display: none;">
+                <input type="file" id="fileInput" accept=".txt,.pdf" style="margin-bottom: 10px; color: #fff;">
+                <button onclick="loadFromFile()">Načíst soubor</button>
+                <div id="fileStatus" style="margin-top: 10px; color: #aaa; font-size: 14px;"></div>
+            </div>
+        </div>
+
+        <div class="reader-view">
+            <div class="word-display" id="wordDisplay">
+                <div class="word-container">
+                    <div class="word-layout">
+                        <span class="word-highlight">Připrav se...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="controls-inner">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <div class="button-row">
+                    <button id="playPauseBtn" onclick="togglePlayPause()">▶ Start</button>
+                    <button class="secondary" onclick="restart()">↺ Restart</button>
+                    <button class="secondary" onclick="showTextInput()">✎ Změnit text</button>
+                </div>
+
+                <div class="speed-control">
+                    <label for="speedSlider">Rychlost:</label>
+                    <input type="range" id="speedSlider" min="60" max="900" value="300" step="30">
+                    <span class="speed-value" id="speedValue">300 slov/min</span>
+                </div>
+
+                <div class="speed-control">
+                    <label for="highlightPosition">Pozice zvýraznění:</label>
+                    <select id="highlightPosition" style="background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 6px; font-size: 14px; cursor: pointer;">
+                        <option value="optimal">Optimální (ORP)</option>
+                        <option value="first">První písmeno</option>
+                        <option value="middle">Prostřední písmeno</option>
+                    </select>
+                </div>
+
+                <div class="speed-control">
+                    <label for="animationToggle">Animace:</label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="animationToggle" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="font-size: 14px; color: #aaa;">Zobrazit s efektem</span>
+                    </label>
+                </div>
+
+                <div class="stats" id="stats">
+                    Slovo: <span id="currentWord">0</span> / <span id="totalWords">0</span>
+                </div>
+
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; font-size: 12px; color: #666; text-align: center;">
+                    <details>
+                        <summary style="cursor: pointer; color: #aaa;">⌨️ Klávesové zkratky</summary>
+                        <div style="margin-top: 10px; line-height: 1.8;">
+                            <strong style="color: #ff4458;">Mezerník</strong> - Play/Pauza<br>
+                            <strong style="color: #ff4458;">↑ / ↓</strong> - Zvýšit/Snížit rychlost (50 slov/min)<br>
+                            <strong style="color: #ff4458;">← / →</strong> - Předchozí/Další slovo (v pauze)<br>
+                            <strong style="color: #ff4458;">Ctrl+R</strong> - Restart<br>
+                            <strong style="color: #ff4458;">Ctrl+E</strong> - Editovat text
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let words = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let intervalId = null;
+        let wordsPerMinute = 300;
+        let highlightMode = 'optimal'; // 'optimal', 'first', 'middle'
+        let useAnimation = true;
+
+        const wordDisplay = document.getElementById('wordDisplay');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        const progressFill = document.getElementById('progressFill');
+        const textInputSection = document.getElementById('textInputSection');
+        const textInput = document.getElementById('textInput');
+        const currentWordSpan = document.getElementById('currentWord');
+        const totalWordsSpan = document.getElementById('totalWords');
+        const highlightPositionSelect = document.getElementById('highlightPosition');
+        const animationToggle = document.getElementById('animationToggle');
+
+        // Initialize with default text
+        const defaultText = textInput.value;
+        if (defaultText.trim()) {
+            words = defaultText.trim().split(/\s+/);
+            totalWordsSpan.textContent = words.length;
+        }
+
+        // Load saved settings from localStorage
+        function loadSettings() {
+            const saved = localStorage.getItem('speedReaderSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    wordsPerMinute = settings.wordsPerMinute || 300;
+                    highlightMode = settings.highlightMode || 'optimal';
+                    useAnimation = settings.useAnimation !== false;
+                    
+                    speedSlider.value = wordsPerMinute;
+                    speedValue.textContent = `${wordsPerMinute} slov/min`;
+                    highlightPositionSelect.value = highlightMode;
+                    animationToggle.checked = useAnimation;
+                } catch (e) {
+                    console.error('Error loading settings:', e);
+                }
+            }
+        }
+
+        // Save settings to localStorage
+        function saveSettings() {
+            const settings = {
+                wordsPerMinute,
+                highlightMode,
+                useAnimation
+            };
+            localStorage.setItem('speedReaderSettings', JSON.stringify(settings));
+        }
+
+        // Load settings on startup
+        loadSettings();
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.input-tab').forEach(tab => tab.style.display = 'none');
+            
+            if (tab === 'text') {
+                document.querySelector('[onclick="switchTab(\'text\')"]').classList.add('active');
+                document.getElementById('textTab').style.display = 'block';
+            } else if (tab === 'url') {
+                document.querySelector('[onclick="switchTab(\'url\')"]').classList.add('active');
+                document.getElementById('urlTab').style.display = 'block';
+            } else if (tab === 'file') {
+                document.querySelector('[onclick="switchTab(\'file\')"]').classList.add('active');
+                document.getElementById('fileTab').style.display = 'block';
+            }
+        }
+
+        // Load from URL
+        async function loadFromUrl() {
+            const url = document.getElementById('urlInput').value.trim();
+            const status = document.getElementById('urlStatus');
+            
+            if (!url) {
+                status.textContent = '❌ Prosím zadej URL';
+                status.style.color = '#ff4458';
+                return;
+            }
+            
+            status.textContent = '⏳ Načítám...';
+            status.style.color = '#aaa';
+            
+            try {
+                const response = await fetch(url);
+                const html = await response.text();
+                
+                // Simple text extraction from HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Remove script and style elements
+                doc.querySelectorAll('script, style, nav, footer, header').forEach(el => el.remove());
+                
+                const text = doc.body.innerText.trim();
+                
+                if (text) {
+                    document.getElementById('textInput').value = text;
+                    status.textContent = '✅ Načteno ' + text.split(/\s+/).length + ' slov';
+                    status.style.color = '#4ade80';
+                    startReading();
+                } else {
+                    status.textContent = '❌ Nepodařilo se extrahovat text';
+                    status.style.color = '#ff4458';
+                }
+            } catch (error) {
+                status.textContent = '❌ Chyba: ' + error.message;
+                status.style.color = '#ff4458';
+            }
+        }
+
+        // Load from file
+        async function loadFromFile() {
+            const fileInput = document.getElementById('fileInput');
+            const status = document.getElementById('fileStatus');
+            
+            if (!fileInput.files.length) {
+                status.textContent = '❌ Prosím vyber soubor';
+                status.style.color = '#ff4458';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            status.textContent = '⏳ Načítám...';
+            status.style.color = '#aaa';
+            
+            try {
+                let text = '';
+                
+                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    // Handle PDF files with PDF.js
+                    const arrayBuffer = await file.arrayBuffer();
+                    
+                    // Set worker path for PDF.js
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    
+                    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+                    const numPages = pdf.numPages;
+                    
+                    status.textContent = `⏳ Načítám PDF (${numPages} stran)...`;
+                    
+                    // Extract text from all pages
+                    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                        const page = await pdf.getPage(pageNum);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(' ');
+                        text += pageText + ' ';
+                    }
+                    
+                } else {
+                    // Handle text files
+                    text = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.onerror = () => reject(new Error('Chyba při čtení souboru'));
+                        reader.readAsText(file);
+                    });
+                }
+                
+                // Clean up text
+                text = text.trim().replace(/\s+/g, ' ');
+                
+                if (text) {
+                    document.getElementById('textInput').value = text;
+                    const wordCount = text.split(/\s+/).length;
+                    status.textContent = `✅ Načteno ${wordCount} slov`;
+                    status.style.color = '#4ade80';
+                    startReading();
+                } else {
+                    status.textContent = '❌ Soubor neobsahuje žádný text';
+                    status.style.color = '#ff4458';
+                }
+                
+            } catch (error) {
+                console.error('Error loading file:', error);
+                status.textContent = '❌ Chyba: ' + error.message;
+                status.style.color = '#ff4458';
+            }
+        }
+
+        speedSlider.addEventListener('input', (e) => {
+            wordsPerMinute = parseInt(e.target.value);
+            speedValue.textContent = `${wordsPerMinute} slov/min`;
+            saveSettings();
+            
+            if (isPlaying) {
+                clearInterval(intervalId);
+                startInterval();
+            }
+        });
+
+        highlightPositionSelect.addEventListener('change', (e) => {
+            highlightMode = e.target.value;
+            saveSettings();
+            if (currentIndex > 0 && currentIndex < words.length) {
+                displayWord();
+            }
+        });
+
+        animationToggle.addEventListener('change', (e) => {
+            useAnimation = e.target.checked;
+            saveSettings();
+        });
+
+        function startReading() {
+            const text = textInput.value.trim();
+            if (!text) {
+                alert('Prosím, vlož nějaký text!');
+                return;
+            }
+
+            words = text.split(/\s+/);
+            currentIndex = 0;
+            textInputSection.classList.add('hidden');
+            totalWordsSpan.textContent = words.length;
+            currentWordSpan.textContent = '0';
+            
+            displayWord();
+            play();
+        }
+
+        function showTextInput() {
+            pause();
+            textInputSection.classList.remove('hidden');
+        }
+
+        function displayWord() {
+            if (currentIndex < words.length) {
+                const word = words[currentIndex];
+                
+                // Calculate highlight index based on selected mode
+                let highlightIndex;
+                
+                if (highlightMode === 'first') {
+                    highlightIndex = 0;
+                } else if (highlightMode === 'middle') {
+                    highlightIndex = Math.floor(word.length / 2);
+                } else { // optimal (ORP)
+                    if (word.length === 1) {
+                        highlightIndex = 0;
+                    } else if (word.length <= 5) {
+                        highlightIndex = 1;
+                    } else if (word.length <= 9) {
+                        highlightIndex = 2;
+                    } else if (word.length <= 13) {
+                        highlightIndex = 3;
+                    } else {
+                        highlightIndex = 4;
+                    }
+                }
+                
+                // Build word parts
+                const before = word.substring(0, highlightIndex);
+                const highlighted = word.charAt(highlightIndex);
+                const after = word.substring(highlightIndex + 1);
+                
+                const animationClass = useAnimation ? ' animated' : '';
+                
+                wordDisplay.innerHTML = `
+                    <div class="word-container${animationClass}">
+                        <div class="word-layout">
+                            <span class="word-before">${before}</span>
+                            <span class="word-highlight">${highlighted}</span>
+                            <span class="word-after">${after}</span>
+                        </div>
+                    </div>
+                `;
+                currentWordSpan.textContent = currentIndex + 1;
+                updateProgress();
+            } else {
+                finish();
+            }
+        }
+
+        function startInterval() {
+            const delay = 60000 / wordsPerMinute; // milliseconds per word
+            intervalId = setInterval(() => {
+                currentIndex++;
+                displayWord();
+            }, delay);
+        }
+
+        function play() {
+            if (words.length === 0) return;
+            
+            isPlaying = true;
+            playPauseBtn.innerHTML = '⏸ Pauza';
+            startInterval();
+        }
+
+        function pause() {
+            isPlaying = false;
+            playPauseBtn.innerHTML = '▶ Pokračovat';
+            clearInterval(intervalId);
+        }
+
+        function togglePlayPause() {
+            if (words.length === 0) {
+                showTextInput();
+                return;
+            }
+
+            if (isPlaying) {
+                pause();
+            } else {
+                play();
+            }
+        }
+
+        function restart() {
+            pause();
+            currentIndex = 0;
+            currentWordSpan.textContent = '0';
+            displayWord();
+            play();
+        }
+
+        function finish() {
+            pause();
+            wordDisplay.innerHTML = `
+                <div class="word-container">
+                    <div class="word-layout">
+                        <span class="word-highlight">✓ Hotovo!</span>
+                    </div>
+                </div>
+            `;
+            playPauseBtn.innerHTML = '↺ Znovu';
+        }
+
+        function updateProgress() {
+            const progress = (currentIndex / words.length) * 100;
+            progressFill.style.width = `${progress}%`;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePlayPause();
+            } else if (e.code === 'ArrowUp') {
+                e.preventDefault();
+                adjustSpeed(50);
+            } else if (e.code === 'ArrowDown') {
+                e.preventDefault();
+                adjustSpeed(-50);
+            } else if (e.code === 'ArrowRight') {
+                if (!isPlaying && currentIndex < words.length - 1) {
+                    currentIndex++;
+                    displayWord();
+                }
+            } else if (e.code === 'ArrowLeft') {
+                if (!isPlaying && currentIndex > 0) {
+                    currentIndex--;
+                    displayWord();
+                }
+            } else if (e.code === 'KeyR' && e.ctrlKey) {
+                e.preventDefault();
+                restart();
+            } else if (e.code === 'KeyE' && e.ctrlKey) {
+                e.preventDefault();
+                showTextInput();
+            }
+        });
+
+        function adjustSpeed(delta) {
+            wordsPerMinute = Math.max(60, Math.min(900, wordsPerMinute + delta));
+            speedSlider.value = wordsPerMinute;
+            speedValue.textContent = `${wordsPerMinute} slov/min`;
+            saveSettings();
+            
+            if (isPlaying) {
+                clearInterval(intervalId);
+                startInterval();
+            }
+        }
+    </script>
+</body>
+</html>
