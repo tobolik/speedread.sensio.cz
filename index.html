@@ -140,6 +140,7 @@
             justify-content: center;
             padding: 20px;
             min-height: 400px;
+            position: relative;
         }
 
         .word-display {
@@ -192,33 +193,35 @@
             text-align: left;
         }
 
-        /* Progress Bar */
+        /* Progress Bar - subtle */
         .progress-container {
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto 20px;
-            padding: 0 20px;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            opacity: 0.4;
         }
 
         .progress-bar {
-            height: 4px;
-            background: #222;
-            border-radius: 2px;
+            height: 2px;
+            background: #333;
+            border-radius: 1px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: #ff4458;
+            background: #666;
             width: 0%;
             transition: width 0.15s ease-out;
         }
 
         .progress-text {
             text-align: center;
-            font-size: 12px;
-            color: #666;
-            margin-top: 8px;
+            font-size: 10px;
+            color: #555;
+            margin-top: 4px;
         }
 
         /* Success Screen */
@@ -235,10 +238,16 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
-            max-width: 500px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 400px;
             margin: 0 auto 30px;
+        }
+        
+        @media (max-width: 400px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .stat-item {
@@ -667,7 +676,8 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                 prepare: 'Připrav se...',
                 done: 'Hotovo!',
                 yourSpeed: 'Tvá rychlost',
-                timeSaved: 'Ušetřený čas',
+                totalTime: 'Celkový čas',
+                timeSaved: 'Ušetřeno oproti 200 WPM',
                 wordsRead: 'Přečteno slov',
                 minutes: 'min',
                 seconds: 's',
@@ -730,7 +740,8 @@ Začněte pomalu a postupně zvyšujte rychlost. Váš mozek si zvykne a budete 
                 prepare: 'Get ready...',
                 done: 'Done!',
                 yourSpeed: 'Your speed',
-                timeSaved: 'Time saved',
+                totalTime: 'Total time',
+                timeSaved: 'Saved vs 200 WPM',
                 wordsRead: 'Words read',
                 minutes: 'min',
                 seconds: 's',
@@ -1053,6 +1064,7 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             currentWordIndex = 0;
             startTime = null;
             totalWordsRead = 0;
+            finishStats = null; // Reset stats
             
             // Show progress bar again
             document.querySelector('.progress-container').style.display = 'block';
@@ -1061,24 +1073,66 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             document.getElementById('playBtn').innerHTML = `▶ ${lang.continue}`;
         }
 
+        let finishStats = null; // Store stats to prevent recalculation
+        
         function finish() {
+            // Prevent multiple calls
+            if (finishStats) {
+                showFinishScreen();
+                return;
+            }
+            
             pause();
             
             const endTime = Date.now();
             const elapsedMs = endTime - startTime;
+            const elapsedSeconds = Math.round(elapsedMs / 1000);
             const elapsedMinutes = elapsedMs / 60000;
             const totalWords = getTotalWords();
             const actualWpm = Math.round(totalWords / elapsedMinutes);
             
             // Calculate time saved vs reading at 200 WPM
-            const normalReadingTime = totalWords / 200; // minutes at 200 WPM
-            const actualTime = elapsedMinutes;
-            const timeSavedMinutes = Math.max(0, normalReadingTime - actualTime);
-            const timeSavedSeconds = Math.round(timeSavedMinutes * 60);
+            const normalReadingSeconds = Math.round((totalWords / 200) * 60);
+            const timeSavedSeconds = Math.max(0, normalReadingSeconds - elapsedSeconds);
             
-            const timeSavedDisplay = timeSavedMinutes >= 1 
-                ? `${Math.floor(timeSavedMinutes)} ${lang.minutes} ${timeSavedSeconds % 60} ${lang.seconds}`
-                : `${timeSavedSeconds} ${lang.seconds}`;
+            // Store stats
+            finishStats = {
+                actualWpm,
+                elapsedSeconds,
+                timeSavedSeconds,
+                totalWords
+            };
+            
+            showFinishScreen();
+            
+            if (isDemoMode) {
+                document.getElementById('speedIndicator').classList.remove('demo-mode');
+                isDemoMode = false;
+                currentDemoStage = 0;
+                wordsPerMinute = 300;
+                updateSpeedDisplay();
+                updateDemoButton();
+            }
+        }
+        
+        function showFinishScreen() {
+            if (!finishStats) return;
+            
+            const { actualWpm, elapsedSeconds, timeSavedSeconds, totalWords } = finishStats;
+            
+            // Format total time
+            const totalMinutes = Math.floor(elapsedSeconds / 60);
+            const totalSecs = elapsedSeconds % 60;
+            const totalTimeDisplay = totalMinutes > 0 
+                ? `${totalMinutes}:${totalSecs.toString().padStart(2, '0')}`
+                : `${totalSecs} ${lang.seconds}`;
+            
+            // Format time saved
+            const savedMinutes = Math.floor(timeSavedSeconds / 60);
+            const savedSecs = timeSavedSeconds % 60;
+            const timeSavedDisplay = timeSavedSeconds > 0
+                ? (savedMinutes > 0 ? `${savedMinutes}:${savedSecs.toString().padStart(2, '0')}` : `${savedSecs} ${lang.seconds}`)
+                : '—';
             
             document.getElementById('wordDisplay').innerHTML = `
                 <div class="success-screen">
@@ -1087,6 +1141,10 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                         <div class="stat-item">
                             <div class="stat-value">${actualWpm}</div>
                             <div class="stat-label">${lang.yourSpeed} (WPM)</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${totalTimeDisplay}</div>
+                            <div class="stat-label">${lang.totalTime}</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value">${timeSavedDisplay}</div>
@@ -1108,15 +1166,6 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             document.querySelector('.progress-container').style.display = 'none';
             
             document.getElementById('playBtn').innerHTML = `↺ ${lang.restart}`;
-            
-            if (isDemoMode) {
-                document.getElementById('speedIndicator').classList.remove('demo-mode');
-                isDemoMode = false;
-                currentDemoStage = 0;
-                wordsPerMinute = 300;
-                updateSpeedDisplay();
-                updateDemoButton();
-            }
         }
 
         function updatePlayButton() {
@@ -1259,6 +1308,7 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             currentWordIndex = 0;
             startTime = null;
             totalWordsRead = 0;
+            finishStats = null; // Reset stats
             
             document.getElementById('textInputSection').classList.add('hidden');
             document.getElementById('readerContainer').classList.remove('hidden');
@@ -1306,6 +1356,7 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             currentDemoStage = 0;
             startTime = null;
             totalWordsRead = 0;
+            finishStats = null; // Reset stats
             
             wordsPerMinute = demoSpeedStages[0];
             updateSpeedDisplay();
