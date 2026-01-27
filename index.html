@@ -251,6 +251,18 @@
             margin: 0 auto 30px;
         }
         
+        .success-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+        
+        .success-buttons button {
+            padding: 12px 24px;
+            font-size: 16px;
+        }
+        
         @media (max-width: 400px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -1351,6 +1363,10 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                             <div class="stat-value">${timeSavedDisplay}</div>
                             <div class="stat-label">${lang.timeSaved} ${normalSeconds} ${lang.at200wpm}</div>
                         </div>
+                    </div>
+                    <div class="success-buttons">
+                        <button class="primary" onclick="restart()">↺ ${lang.readAgain}</button>
+                        <button class="secondary" onclick="showTextInput()">📝 ${lang.newText}</button>
                     </div>
                 </div>
             `;
