@@ -515,7 +515,10 @@
 Místo toho, aby vaše oči musely skákat z řádku na řádek, text je prezentován slovo po slovu na stejném místě. To eliminuje potřebu pohybu očí a umožňuje mozku zpracovávat informace mnohem rychleji.
 
 Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S tréninkem a pomocí technik jako je tato můžete dosáhnout rychlosti až 800-1000 slov za minutu.</textarea>
-            <button onclick="startReading()" id="startBtn" class="primary">Začít číst</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="startReading()" id="startBtn" class="primary">Začít číst</button>
+                <button onclick="hideTextInput()" id="hideTextBtn" class="secondary" style="display: none;">✕ <span id="hideTextLabel">Skrýt</span></button>
+            </div>
         </div>
     </div>
 
@@ -571,7 +574,7 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                 </div>
 
                 <div class="extended-controls">
-                    <button class="secondary" onclick="restart()">↺ <span id="restartBtn">Restart</span></button>
+                    <button class="secondary" onclick="restart()">↺ <span id="restartBtn">Číst znovu</span></button>
                     <button class="secondary" onclick="goToStart()">⏮⏮ <span id="startTextBtn">Začátek</span></button>
                     <button class="secondary" onclick="goToEnd()"><span id="endTextBtn">Konec</span> ⏭⏭</button>
                 </div>
@@ -651,8 +654,9 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                 play: 'Start',
                 pause: 'Pauza',
                 continue: 'Pokračovat',
-                restart: 'Restart',
+                restart: 'Číst znovu',
                 demo: 'Demo',
+                hideText: 'Skrýt',
                 endDemo: 'Ukončit Demo',
                 paragraph: 'Odstavec',
                 sentence: 'Věta',
@@ -715,8 +719,9 @@ Začněte pomalu a postupně zvyšujte rychlost. Váš mozek si zvykne a budete 
                 play: 'Start',
                 pause: 'Pause',
                 continue: 'Continue',
-                restart: 'Restart',
+                restart: 'Read again',
                 demo: 'Demo',
+                hideText: 'Hide',
                 endDemo: 'End Demo',
                 paragraph: 'Paragraph',
                 sentence: 'Sentence',
@@ -825,6 +830,12 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             document.getElementById('endTextBtn').textContent = lang.end;
             document.getElementById('shortcutsTitle').textContent = `⌨️ ${lang.shortcuts}`;
             document.getElementById('footerText').textContent = lang.footerText;
+            
+            // Update hide text button
+            const hideTextLabel = document.getElementById('hideTextLabel');
+            if (hideTextLabel) {
+                hideTextLabel.textContent = lang.hideText;
+            }
             
             // Update toggle view button
             const toggleBtn = document.getElementById('toggleViewBtn');
@@ -1173,10 +1184,6 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                             <div class="stat-label">${lang.wordsRead}</div>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                        <button class="primary" onclick="restart()">↺ ${lang.readAgain}</button>
-                        <button class="secondary" onclick="showTextInput()">✎ ${lang.newText}</button>
-                    </div>
                 </div>
             `;
             
@@ -1311,6 +1318,17 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
             pause();
             document.getElementById('textInputSection').classList.remove('hidden');
             document.getElementById('readerContainer').classList.add('hidden');
+            
+            // Show hide button if there's already parsed text
+            const hideBtn = document.getElementById('hideTextBtn');
+            if (hideBtn && paragraphs.length > 0) {
+                hideBtn.style.display = 'inline-flex';
+            }
+        }
+        
+        function hideTextInput() {
+            document.getElementById('textInputSection').classList.add('hidden');
+            document.getElementById('readerContainer').classList.remove('hidden');
         }
 
         function startReading() {
@@ -1528,7 +1546,11 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                 toggleMode();
             } else if (e.code === 'Escape') {
                 e.preventDefault();
-                if (isPlaying) {
+                // Close text input if open
+                const textSection = document.getElementById('textInputSection');
+                if (!textSection.classList.contains('hidden') && paragraphs.length > 0) {
+                    hideTextInput();
+                } else if (isPlaying) {
                     pause();
                 }
             }
