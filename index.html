@@ -779,6 +779,7 @@ Studie ukazují, že běžný člověk čte rychlostí 200-300 slov za minutu. S
                 totalTime: 'Celkový čas čtení',
                 timeSaved: 'Ušetřeno oproti',
                 at200wpm: 's při 200 WPM',
+                percentSaved: 'Procentuální úspora',
                 wordsRead: 'Přečteno slov',
                 minutes: 'min',
                 seconds: 's',
@@ -845,6 +846,7 @@ Začněte pomalu a postupně zvyšujte rychlost. Váš mozek si zvykne a budete 
                 totalTime: 'Total reading time',
                 timeSaved: 'Saved vs',
                 at200wpm: 's at 200 WPM',
+                percentSaved: 'Percentage saved',
                 wordsRead: 'Words read',
                 minutes: 'min',
                 seconds: 's',
@@ -1345,6 +1347,12 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                 ? `${timeSavedSeconds} ${lang.seconds}`
                 : '—';
             
+            // Percentage saved vs 200 WPM
+            const percentSaved = normalSeconds > 0
+                ? Math.round((timeSavedSeconds / normalSeconds) * 100)
+                : 0;
+            const percentSavedDisplay = percentSaved > 0 ? `${percentSaved} %` : '—';
+            
             document.getElementById('wordDisplay').innerHTML = `
                 <div class="success-screen">
                     <h2>🎉 ${lang.done}</h2>
@@ -1364,6 +1372,10 @@ Start slow and gradually increase speed. Your brain will adapt and you'll read f
                         <div class="stat-item">
                             <div class="stat-value">${timeSavedDisplay}</div>
                             <div class="stat-label">${lang.timeSaved} ${normalSeconds} ${lang.at200wpm}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${percentSavedDisplay}</div>
+                            <div class="stat-label">${lang.percentSaved}</div>
                         </div>
                     </div>
                 </div>

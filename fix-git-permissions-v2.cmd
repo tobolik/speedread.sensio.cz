@@ -3,7 +3,7 @@ REM Fix Git permissions script v2 - Reset ACL and grant permissions
 REM Run this as Administrator: Right-click CMD -> Run as Administrator
 
 echo Fixing Git permissions (v2 - reset ACL)...
-cd /d "c:\weby\speedread.sensio.cz"
+cd /d "c:\weby\speedread-sensio-cz"
 
 echo Resetting ACL on .git directory...
 icacls .git /reset /T
