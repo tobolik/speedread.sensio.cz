@@ -1,7 +1,7 @@
 <?php
 /**
  * Save reading statistics to MySQL
- * RSVP Rychločtečka v1.1.2
+ * RSVP Rychločtečka v1.2.4
  */
 
 require_once 'config.php';
